@@ -1,0 +1,63 @@
+// ── Tokens ───────────────────────────────
+$bg-base: #0a0d1a;
+$bg-card: #111527;
+$bg-input: #0d1020;
+$border-subtle: #1e2440;
+$border-focus: #5c6ef8;
+
+$accent: #5c6ef8;
+$accent-hover: #7b8bff;
+$accent-glow: rgba(92, 110, 248, 0.35);
+
+$text-primary: #e8eaf6;
+$text-secondary: #7b82a8;
+$text-label: #a0a8cc;
+$placeholder: #3d4466;
+
+$radius-card: 16px;
+$radius-input: 10px;
+$radius-btn: 10px;
+
+$font-heading: 'DM Sans', sans-serif;
+$font-body: 'DM Sans', sans-serif;
+
+// ── Button ────────────────────────────────
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 13px 20px;
+  border: none;
+  border-radius: $radius-btn;
+  font-family: $font-body;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.1s ease;
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.primary-btn {
+  margin-top: 8px;
+  width: 100%;
+  background: $accent;
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(92, 110, 248, 0.4);
+
+  &:hover {
+    background: $accent-hover;
+    box-shadow: 0 6px 28px rgba(92, 110, 248, 0.55);
+  }
+
+  &:focus-visible {
+    outline: 2px solid $accent;
+    outline-offset: 3px;
+  }
+}
