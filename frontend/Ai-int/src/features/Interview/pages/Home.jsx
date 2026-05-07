@@ -24,11 +24,18 @@ const Home = () => {
       return;
     }
 
-    const data = await generateReport({ resumeFile, jobDescription, selfDescription });
-    if (data && data.interviewReport) {
-      navigate(`/interview/${data.interviewReport._id}`);
+    const result = await generateReport({ resumeFile, jobDescription, selfDescription });
+    if (result.success) {
+      navigate(`/interview/${result.data.interviewReport._id}`);
     } else {
-      setError("Failed to generate report. Please try again.");
+      // Show the real server error so the user knows exactly what went wrong
+      const raw = result.error || "";
+      const isQuota = raw.toLowerCase().includes("quota") || raw.toLowerCase().includes("429") || raw.toLowerCase().includes("resource_exhausted");
+      if (isQuota) {
+        setError("AI quota exceeded — the free-tier daily limit is reached. Please wait a few hours and try again, or use a different API key.");
+      } else {
+        setError(raw || "Failed to generate report. Please try again.");
+      }
     }
   };
 

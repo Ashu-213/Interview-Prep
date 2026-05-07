@@ -94,7 +94,7 @@ Instructions:
 - preparationPlan: exactly 7 days, each with a focus and 3-5 specific tasks`;
 
     const response = await ai.models.generateContent({
-        model: "gemini-2.0-flash-lite",
+        model: "gemini-1.5-flash",
         contents: prompt,
         config: {
             responseMimeType: "application/json",
