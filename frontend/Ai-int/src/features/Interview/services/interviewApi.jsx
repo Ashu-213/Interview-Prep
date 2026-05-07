@@ -2,7 +2,7 @@ import axios from "axios";
 
 
 const api = axios.create({
-    baseURL: "http://localhost:5000",
+    baseURL: "/",
     withCredentials: true
 });
 
@@ -10,17 +10,17 @@ const api = axios.create({
 /** 
  * @desc service to generate interview report based on user self description, job description and resume file 
  */
-export const generateInterviewReport = ({resumeFile, jobDescription, selfDescription}) => {
+export const generateInterviewReport = async ({resumeFile, jobDescription, selfDescription}) => {
     const formData = new FormData();
     formData.append("resume", resumeFile);
     formData.append("jobDescription", jobDescription);
     formData.append("selfDescription", selfDescription);
 
-    const response = api.post("/api/interview/", formData, {
+    const response = await api.post("/api/interview/", formData, {
         headers: {
             "Content-Type": "multipart/form-data"
         }
-    })
+    });
     return response.data;
 }
 

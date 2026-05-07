@@ -3,7 +3,7 @@ import axios from 'axios';
 
 //instance of axios with default config
 const api = axios.create({
-    baseURL: 'http://localhost:3000/api/auth',
+    baseURL: '/api/auth',
     withCredentials: true
 });
 
