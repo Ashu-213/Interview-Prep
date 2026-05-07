@@ -1,68 +1,72 @@
-import React from 'react'
-import '../authForm.scss'
-import { useNavigate, Link } from 'react-router'
+import '../authForm.scss';
+import { useNavigate, Link } from 'react-router';
 import { useAuth } from '../hooks/useAuth';
 import { useState } from 'react';
 
 const Register = () => {
-
-    // get auth context
-    const { Loading, handleRegister } = useAuth();
+    const { loading, handleRegister } = useAuth();
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-
-    // navigate to home page
+    const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    //handle reload
-    const handleReload = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        await handleRegister(username, email, password);
-        navigate("/");
-    }
-    if (Loading) {
-        return (<main><h1>Loading...</h1></main>);
-    }
+        setError('');
+        const result = await handleRegister(username, email, password);
+        if (result.success) {
+            navigate('/');
+        } else {
+            setError(result.error);
+        }
+    };
 
+    if (loading) {
+        return <main><h1>Loading...</h1></main>;
+    }
 
     return (
         <main>
             <div className="form-container">
                 <h1>Sign Up</h1>
-
-                <form onSubmit={handleReload}>
+                <form onSubmit={handleSubmit}>
                     <div className="input-group">
                         <label htmlFor="username">Username</label>
-                        <input 
+                        <input
                             onChange={(e) => setUsername(e.target.value)}
-                            type="text" id="username" name='Username' placeholder='Enter your Username' />
+                            type="text" id="username" name="Username"
+                            placeholder="Enter your Username"
+                            value={username}
+                        />
                     </div>
                     <div className="input-group">
                         <label htmlFor="email">Email</label>
-                        <input 
+                        <input
                             onChange={(e) => setEmail(e.target.value)}
-                            type="email" id="email" name='Email' placeholder='Enter your Email' />
+                            type="email" id="email" name="Email"
+                            placeholder="Enter your Email"
+                            value={email}
+                        />
                     </div>
                     <div className="input-group">
                         <label htmlFor="password">Password</label>
-                        <input 
+                        <input
                             onChange={(e) => setPassword(e.target.value)}
-                            type="password" id="password" name='Password' placeholder='Enter your Password' />
+                            type="password" id="password" name="Password"
+                            placeholder="Enter your Password"
+                            value={password}
+                        />
                     </div>
-
-                    <button className='btn primary-btn' type='submit'>Sign Up</button>
-
+                    {error && <p className="form-error" style={{ color: '#f87171', fontSize: '0.875rem', margin: '0.25rem 0' }}>{error}</p>}
+                    <button className="btn primary-btn" type="submit">Sign Up</button>
                 </form>
-
-                {/* navigate to login */}
-                <p className='navigate-login'>
+                <p className="navigate-login">
                     Already have an account? <Link to="/login">Login</Link>
                 </p>
-
             </div>
         </main>
-    )
-}
+    );
+};
 
-export default Register
+export default Register;

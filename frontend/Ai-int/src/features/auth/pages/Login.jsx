@@ -1,60 +1,62 @@
-import '../authForm.scss'
-import { useNavigate, Link } from 'react-router'
+import '../authForm.scss';
+import { useNavigate, Link } from 'react-router';
 import { useAuth } from '../hooks/useAuth';
 import { useState } from 'react';
 
-
 const Login = () => {
-    // get auth context
-    const { Loading, handleLogin } = useAuth();
+    const { loading, handleLogin } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-
-    // navigate to register page
+    const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    // handle reload
-    const handleReload = async(e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        await handleLogin(email, password);
-        navigate("/");
-       
-    }
-    if (Loading) {
-        return (<main><h1>Loading...</h1></main>);
-    }
+        setError('');
+        const result = await handleLogin(email, password);
+        if (result.success) {
+            navigate('/');
+        } else {
+            setError(result.error);
+        }
+    };
 
+    if (loading) {
+        return <main><h1>Loading...</h1></main>;
+    }
 
     return (
         <main>
             <div className="form-container">
                 <h1>Login</h1>
-                
-                <form onSubmit={handleReload}>
+                <form onSubmit={handleSubmit}>
                     <div className="input-group">
                         <label htmlFor="email">Email</label>
-                        <input 
-                        onChange={(e) => setEmail(e.target.value)}
-                        type="email" id="email" name='Email' placeholder='Enter your Email' />
+                        <input
+                            onChange={(e) => setEmail(e.target.value)}
+                            type="email" id="email" name="Email"
+                            placeholder="Enter your Email"
+                            value={email}
+                        />
                     </div>
                     <div className="input-group">
                         <label htmlFor="password">Password</label>
-                        <input 
-                        onChange={(e) => setPassword(e.target.value)}
-                        type="password" id="password" name='Password' placeholder='Enter your Password' />
+                        <input
+                            onChange={(e) => setPassword(e.target.value)}
+                            type="password" id="password" name="Password"
+                            placeholder="Enter your Password"
+                            value={password}
+                        />
                     </div>
-                    <button className='btn primary-btn' type='submit'>Login</button>
-
+                    {error && <p className="form-error" style={{ color: '#f87171', fontSize: '0.875rem', margin: '0.25rem 0' }}>{error}</p>}
+                    <button className="btn primary-btn" type="submit">Login</button>
                 </form>
-
-                {/* navigate to register */}
-                <p className='navigate-register'>
+                <p className="navigate-register">
                     Don't have an account? <Link to="/register">Sign Up</Link>
                 </p>
             </div>
-
         </main>
-    )
-}
+    );
+};
 
-export default Login
+export default Login;

@@ -1,39 +1,80 @@
 const { GoogleGenAI } = require("@google/genai");
-const { z } = require("zod");
-const { zodToJsonSchema } = require("zod-to-json-schema");
 
 const ai = new GoogleGenAI({
     apiKey: process.env.GEMINI_API_KEY,
 });
 
-const interviewReportSchema = z.object({
-    overallScore: z.number().describe("A score between 0 and 100 indicating how well the candidate matches the job description. Higher is better."),
-    title: z.string().describe("The job title for which this interview report is generated"),
-    technicalQuestions: z.array(z.object({
-        question: z.string().describe("A technical question likely to be asked in the interview"),
-        intentions: z.string().describe("Why the interviewer asks this question and what they are looking for"),
-        answer: z.string().describe("A detailed guide on how to answer this question effectively, what key points to cover, and common mistakes to avoid")
-    })).describe("5-7 technical questions tailored to the job description and candidate's background"),
-    behavioralQuestions: z.array(z.object({
-        question: z.string().describe("A behavioral question likely to be asked in the interview"),
-        intentions: z.string().describe("Why the interviewer asks this question and what they are looking for"),
-        answer: z.string().describe("A detailed guide on how to answer using the STAR method, what key points to cover, and common mistakes to avoid")
-    })).describe("5-7 behavioral questions tailored to the job description and candidate's background"),
-    skillGaps: z.array(z.object({
-        skill: z.string().describe("The skill or knowledge area the candidate is lacking or needs to improve"),
-        gap: z.string().describe("A clear description of what the gap is and why it matters for this role"),
-        severity: z.enum(["low", "medium", "high"]).describe("How critical this gap is: high = deal-breaker, medium = important, low = nice to have")
-    })).describe("Key skill gaps between the candidate profile and job requirements"),
-    preparationPlan: z.array(z.object({
-        day: z.number().describe("Day number in the preparation timeline"),
-        focus: z.string().describe("The main focus area for this day"),
-        tasks: z.array(z.string()).describe("Specific actionable tasks to complete on this day")
-    })).describe("A 7-day structured preparation plan to get the candidate ready for the interview"),
-});
+// Plain JSON schema — avoids zod v3/v4 compatibility issues with zodToJsonSchema
+const interviewReportSchema = {
+    type: "object",
+    properties: {
+        overallScore: {
+            type: "number",
+            description: "Score 0-100 showing how well the candidate matches the job"
+        },
+        title: {
+            type: "string",
+            description: "Exact job title extracted from the job description"
+        },
+        technicalQuestions: {
+            type: "array",
+            description: "5-7 technical questions tailored to the role",
+            items: {
+                type: "object",
+                properties: {
+                    question: { type: "string", description: "The technical interview question" },
+                    intentions: { type: "string", description: "Why the interviewer asks this and what they look for" },
+                    answer: { type: "string", description: "Detailed guide on how to answer effectively" }
+                },
+                required: ["question", "intentions", "answer"]
+            }
+        },
+        behavioralQuestions: {
+            type: "array",
+            description: "5-7 behavioral questions tailored to the role",
+            items: {
+                type: "object",
+                properties: {
+                    question: { type: "string", description: "The behavioral interview question" },
+                    intentions: { type: "string", description: "Why the interviewer asks this and what they look for" },
+                    answer: { type: "string", description: "Detailed guide using STAR method" }
+                },
+                required: ["question", "intentions", "answer"]
+            }
+        },
+        skillGaps: {
+            type: "array",
+            description: "Key gaps between candidate profile and job requirements",
+            items: {
+                type: "object",
+                properties: {
+                    skill: { type: "string", description: "The skill or knowledge area that is lacking" },
+                    gap: { type: "string", description: "What the gap is and why it matters for this role" },
+                    severity: { type: "string", enum: ["low", "medium", "high"], description: "Criticality: high=deal-breaker, medium=important, low=nice-to-have" }
+                },
+                required: ["skill", "gap", "severity"]
+            }
+        },
+        preparationPlan: {
+            type: "array",
+            description: "7-day structured preparation plan",
+            items: {
+                type: "object",
+                properties: {
+                    day: { type: "number", description: "Day number (1-7)" },
+                    focus: { type: "string", description: "Main focus area for the day" },
+                    tasks: { type: "array", items: { type: "string" }, description: "Specific actionable tasks for the day" }
+                },
+                required: ["day", "focus", "tasks"]
+            }
+        }
+    },
+    required: ["overallScore", "title", "technicalQuestions", "behavioralQuestions", "skillGaps", "preparationPlan"]
+};
 
 async function generateInterviewReport({ sampleResume, jobDescription, selfDescription }) {
     const prompt =
-        `You are an expert AI interview coach. Analyze the following candidate information carefully and generate a comprehensive, highly personalized interview preparation report.
+        `You are an expert AI interview coach. Analyze the candidate information below and generate a comprehensive, highly personalized interview preparation report. Return ONLY valid JSON matching the schema exactly.
 
 RESUME:
 ${sampleResume}
@@ -42,26 +83,28 @@ JOB DESCRIPTION:
 ${jobDescription}
 
 CANDIDATE SELF-DESCRIPTION:
-${selfDescription}
+${selfDescription || "Not provided"}
 
-Generate a detailed, actionable report with:
-- An honest overall match score (0-100)
-- 5-7 technical interview questions specific to the role and candidate's background
-- 5-7 behavioral questions relevant to the role
-- Key skill gaps with clear descriptions and severity levels
-- A practical 7-day preparation plan with specific daily tasks
-- The exact job title from the job description`;
+Instructions:
+- overallScore: honest 0-100 match score
+- title: copy the exact job title from the job description above
+- technicalQuestions: 5-7 questions specific to the role and candidate background
+- behavioralQuestions: 5-7 questions relevant to this role
+- skillGaps: identify real gaps between the candidate and this role
+- preparationPlan: exactly 7 days, each with a focus and 3-5 specific tasks`;
 
     const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash-lite",
+        model: "gemini-2.0-flash",
         contents: prompt,
         config: {
             responseMimeType: "application/json",
-            responseSchema: zodToJsonSchema(interviewReportSchema)
+            responseSchema: interviewReportSchema
         }
     });
 
-    return JSON.parse(response.text);
+    const raw = response.text;
+    console.log("✅ AI raw response (first 200 chars):", raw.substring(0, 200));
+    return JSON.parse(raw);
 }
 
 module.exports = { generateInterviewReport };
