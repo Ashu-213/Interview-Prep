@@ -41,8 +41,12 @@ export const useAuth = () => {
         try {
             await logoutUser();
             setUser(null);
+            return { success: true };
         } catch (error) {
             console.error("Logout error:", error);
+            // Even if the API fails, clear local auth state to prevent protected page access.
+            setUser(null);
+            return { success: false };
         } finally {
             setLoading(false);
         }
