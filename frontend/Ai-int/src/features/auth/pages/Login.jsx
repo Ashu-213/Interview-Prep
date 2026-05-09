@@ -15,7 +15,7 @@ const Login = () => {
         setError('');
         const result = await handleLogin(email, password);
         if (result.success) {
-            navigate('/');
+            navigate('/dashboard');
         } else {
             setError(result.error);
         }
@@ -26,7 +26,7 @@ const Login = () => {
     }
 
     return (
-        <main>
+        <main className="auth-page">
             <div className="form-container">
                 <h1>Login</h1>
                 <form onSubmit={handleSubmit}>

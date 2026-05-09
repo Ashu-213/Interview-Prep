@@ -1,16 +1,6 @@
 
 @use "sass:color";
 
-//design auth pages
-main {
-  min-height: 100vh;
-  width: 100%;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
 // ─────────────────────────────────────────
 //  Auth Form — Fixed Dark Theme
 //  Palette: Deep Navy + Electric Indigo
@@ -41,7 +31,7 @@ $font-body: 'DM Sans', sans-serif;
 
 
 // ── Layout ────────────────────────────────
-main {
+.auth-page {
   display: flex;
   align-items: center;
   justify-content: center;

@@ -16,7 +16,7 @@ const Register = () => {
         setError('');
         const result = await handleRegister(username, email, password);
         if (result.success) {
-            navigate('/');
+            navigate('/dashboard');
         } else {
             setError(result.error);
         }
@@ -27,7 +27,7 @@ const Register = () => {
     }
 
     return (
-        <main>
+        <main className="auth-page">
             <div className="form-container">
                 <h1>Sign Up</h1>
                 <form onSubmit={handleSubmit}>

@@ -91,7 +91,7 @@ const Interview = () => {
       <main className="loading-screen">
         <div className="loader-content">
           <h2>Report not found.</h2>
-          <button className="back-btn" onClick={() => navigate('/')}>← Go Back</button>
+          <button className="back-btn" onClick={() => navigate('/dashboard')}>← Go Back</button>
         </div>
       </main>
     );
@@ -102,7 +102,7 @@ const Interview = () => {
 
       {/* ── Header ── */}
       <div className="report-header">
-        <button className="back-btn" onClick={() => navigate('/')}>← New Report</button>
+        <button className="back-btn" onClick={() => navigate('/dashboard')}>← New Report</button>
         <div className="header-text">
           <h1>{report.title}</h1>
           <p className="report-date">
