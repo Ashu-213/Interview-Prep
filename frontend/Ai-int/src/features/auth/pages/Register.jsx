@@ -1,22 +1,24 @@
 import '../authForm.scss';
-import { useNavigate, Link } from 'react-router';
+import { useNavigate, Link, useLocation, Navigate } from 'react-router';
 import { useAuth } from '../hooks/useAuth';
 import { useState } from 'react';
 
 const Register = () => {
-    const { loading, handleRegister } = useAuth();
+    const { loading, user, handleRegister } = useAuth();
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
+    const location = useLocation();
+    const destination = location.state?.from?.pathname || '/dashboard';
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         const result = await handleRegister(username, email, password);
         if (result.success) {
-            navigate('/dashboard');
+            navigate(destination, { replace: true });
         } else {
             setError(result.error);
         }
@@ -24,6 +26,10 @@ const Register = () => {
 
     if (loading) {
         return <main><h1>Loading...</h1></main>;
+    }
+
+    if (user) {
+        return <Navigate to={destination} replace />;
     }
 
     return (
