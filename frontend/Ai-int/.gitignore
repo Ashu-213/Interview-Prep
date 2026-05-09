@@ -22,3 +22,18 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment & Sensitive Data
+.env
+.env.local
+.env.*.local
+.env.production.local
+*.key
+*.pem
+config/secrets
+
+# API Keys & Credentials
+*.apikey
+*.secret
+credentials.json
+secrets.json

@@ -113,96 +113,113 @@ const Interview = () => {
         </div>
       </div>
 
-      {/* ── Match Score ── */}
-      <section className="report-section score-section">
-        <div className="score-card">
-          <ScoreRing score={report.overallScore} />
-          <div className="score-info">
-            <h2>Resume Match Score</h2>
-            <p>
-              {report.overallScore >= 70
-                ? 'Strong match! Your profile aligns well with this role.'
-                : report.overallScore >= 45
-                ? 'Moderate match. Focus on the skill gaps below to improve your chances.'
-                : 'Low match. Consider upskilling in the identified gap areas before applying.'}
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Technical Questions ── */}
-      <section className="report-section">
-        <div className="section-header">
-          <span className="section-icon">⚙️</span>
-          <div>
-            <h2>Technical Questions</h2>
-            <p className="section-sub">{report.technicalQuestions?.length} questions tailored to your role</p>
-          </div>
-        </div>
-        <Accordion items={report.technicalQuestions || []} type="technical" />
-      </section>
-
-      {/* ── Behavioral Questions ── */}
-      <section className="report-section">
-        <div className="section-header">
-          <span className="section-icon">🧠</span>
-          <div>
-            <h2>Behavioral Questions</h2>
-            <p className="section-sub">{report.behavioralQuestions?.length} questions to prepare for</p>
-          </div>
-        </div>
-        <Accordion items={report.behavioralQuestions || []} type="behavioral" />
-      </section>
-
-      {/* ── Skill Gaps ── */}
-      <section className="report-section">
-        <div className="section-header">
-          <span className="section-icon">📊</span>
-          <div>
-            <h2>Skill Gaps</h2>
-            <p className="section-sub">Areas to strengthen before your interview</p>
-          </div>
-        </div>
-        <div className="skill-gaps-grid">
-          {report.skillGaps?.map((gap, i) => (
-            <div key={i} className="skill-gap-card">
-              <div className="skill-gap-top">
-                <span className="skill-name">{gap.skill}</span>
-                <span className={`severity-badge ${severityColor[gap.severity]}`}>
-                  {gap.severity}
-                </span>
-              </div>
-              <p className="gap-description">{gap.gap}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Preparation Plan ── */}
-      <section className="report-section">
-        <div className="section-header">
-          <span className="section-icon">📅</span>
-          <div>
-            <h2>7-Day Preparation Plan</h2>
-            <p className="section-sub">Your personalized roadmap to interview success</p>
-          </div>
-        </div>
-        <div className="prep-plan">
-          {report.preparationPlan?.map((dayPlan, i) => (
-            <div key={i} className="day-card">
-              <div className="day-badge">Day {dayPlan.day}</div>
-              <div className="day-content">
-                <h3 className="day-focus">{dayPlan.focus}</h3>
-                <ul className="day-tasks">
-                  {dayPlan.tasks.map((task, j) => (
-                    <li key={j}>{task}</li>
-                  ))}
-                </ul>
+      {/* ── 3-Column Layout ── */}
+      <div className="dashboard-grid">
+        
+        {/* ── LEFT: Preparation Plan ── */}
+        <div className="column column-left">
+          <section className="report-section">
+            <div className="section-header">
+              <span className="section-icon">📅</span>
+              <div>
+                <h2>7-Day Plan</h2>
+                <p className="section-sub">Your roadmap to success</p>
               </div>
             </div>
-          ))}
+            <div className="prep-plan">
+              {report.preparationPlan?.map((dayPlan, i) => (
+                <div key={i} className="day-card">
+                  <div className="day-badge">Day {dayPlan.day}</div>
+                  <div className="day-content">
+                    <h3 className="day-focus">{dayPlan.focus}</h3>
+                    <ul className="day-tasks">
+                      {dayPlan.tasks.map((task, j) => (
+                        <li key={j}>{task}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
         </div>
-      </section>
+
+        {/* ── MIDDLE: Questions ── */}
+        <div className="column column-middle">
+          
+          {/* Technical Questions */}
+          <section className="report-section">
+            <div className="section-header">
+              <span className="section-icon">⚙️</span>
+              <div>
+                <h2>Technical</h2>
+                <p className="section-sub">{report.technicalQuestions?.length} questions</p>
+              </div>
+            </div>
+            <Accordion items={report.technicalQuestions || []} type="technical" />
+          </section>
+
+          {/* Behavioral Questions */}
+          <section className="report-section">
+            <div className="section-header">
+              <span className="section-icon">🧠</span>
+              <div>
+                <h2>Behavioral</h2>
+                <p className="section-sub">{report.behavioralQuestions?.length} questions</p>
+              </div>
+            </div>
+            <Accordion items={report.behavioralQuestions || []} type="behavioral" />
+          </section>
+
+        </div>
+
+        {/* ── RIGHT: Score & Skill Gaps ── */}
+        <div className="column column-right">
+          
+          {/* Score Card */}
+          <section className="report-section score-section">
+            <div className="score-card">
+              <ScoreRing score={report.overallScore} />
+              <div className="score-info">
+                <h2>Match Score</h2>
+                <p>
+                  {report.overallScore >= 70
+                    ? 'Strong match! Your profile aligns well with this role.'
+                    : report.overallScore >= 45
+                    ? 'Moderate match. Focus on gaps below.'
+                    : 'Low match. Upskill in identified areas.'}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Skill Gaps */}
+          <section className="report-section">
+            <div className="section-header">
+              <span className="section-icon">📊</span>
+              <div>
+                <h2>Skill Gaps</h2>
+                <p className="section-sub">Areas to strengthen</p>
+              </div>
+            </div>
+            <div className="skill-gaps-grid">
+              {report.skillGaps?.map((gap, i) => (
+                <div key={i} className="skill-gap-card">
+                  <div className="skill-gap-top">
+                    <span className="skill-name">{gap.skill}</span>
+                    <span className={`severity-badge ${severityColor[gap.severity]}`}>
+                      {gap.severity}
+                    </span>
+                  </div>
+                  <p className="gap-description">{gap.gap}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+        </div>
+
+      </div>
 
     </main>
   );
