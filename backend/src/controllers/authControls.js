@@ -3,6 +3,14 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const blacklistModel = require("../models/blacklistUser");
 
+const isProduction = process.env.NODE_ENV === "production";
+const authCookieOptions = {
+    httpOnly: true,
+    sameSite: isProduction ? "none" : "lax",
+    secure: isProduction,
+    maxAge: 24 * 60 * 60 * 1000
+};
+
 //register controller
 const register = async (req, res) => {
     try {
@@ -24,7 +32,7 @@ const register = async (req, res) => {
         const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
         //setting the cookie
-        res.cookie("token", token, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
+        res.cookie("token", token, authCookieOptions);
         res.status(201).json({
             message: "User registered successfully",
             user: {
@@ -63,7 +71,7 @@ const login = async (req, res) => {
         const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
         //setting the cookie
-        res.cookie("token", token, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
+        res.cookie("token", token, authCookieOptions);
 
         res.status(200).json({
             message: "User logged in successfully",
@@ -89,7 +97,11 @@ const logout = async (req, res) => {
     await blacklistModel.create({ token });
 
     //clearing the cookie
-    res.clearCookie("token");
+    res.clearCookie("token", {
+        httpOnly: true,
+        sameSite: isProduction ? "none" : "lax",
+        secure: isProduction
+    });
     res.status(200).json({ message: "User logged out successfully" });
 
 };
