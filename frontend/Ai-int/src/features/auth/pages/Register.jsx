@@ -1,6 +1,7 @@
 import '../authForm.scss';
 import { useNavigate, Link, useLocation, Navigate } from 'react-router';
 import { useAuth } from '../hooks/useAuth';
+import LoadingOverlay from '../components/LoadingOverlay';
 import { useState } from 'react';
 
 const Register = () => {
@@ -25,7 +26,7 @@ const Register = () => {
     };
 
     if (loading) {
-        return <main><h1>Loading...</h1></main>;
+        return <LoadingOverlay message="Creating your account..." submessage="Securely registering your profile" />;
     }
 
     if (user) {

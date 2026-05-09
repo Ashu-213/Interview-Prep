@@ -1,5 +1,7 @@
 import { Link, NavLink, useNavigate } from 'react-router';
 import { useAuth } from '../../features/auth/hooks/useAuth';
+import LoadingOverlay from '../../features/auth/components/LoadingOverlay';
+import { useState } from 'react';
 import './navbar.scss';
 
 const navLinkClass = ({ isActive }) => `nav-link${isActive ? ' active' : ''}`;
@@ -7,11 +9,21 @@ const navLinkClass = ({ isActive }) => `nav-link${isActive ? ' active' : ''}`;
 const Navbar = () => {
   const { user, loading, handleLogout } = useAuth();
   const navigate = useNavigate();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const onLogout = async () => {
-    await handleLogout();
+    setIsLoggingOut(true);
+    // Navigate FIRST to unmount protected routes before clearing user state
     navigate('/', { replace: true });
+    // Then clear user state after a micro-task to ensure navigation starts
+    await new Promise(resolve => setTimeout(resolve, 0));
+    await handleLogout();
+    setIsLoggingOut(false);
   };
+
+  if (isLoggingOut) {
+    return <LoadingOverlay message="Logging you out..." submessage="Securely closing your session" />;
+  }
 
   return (
     <header className="site-navbar">

@@ -37,19 +37,15 @@ export const useAuth = () => {
     };
 
     const handleLogout = async () => {
-        setLoading(true);
         try {
             await logoutUser();
-            setUser(null);
-            return { success: true };
         } catch (error) {
             console.error("Logout error:", error);
-            // Even if the API fails, clear local auth state to prevent protected page access.
-            setUser(null);
-            return { success: false };
-        } finally {
-            setLoading(false);
         }
+        // Always clear user state regardless of API response
+        setUser(null);
+        setLoading(false);
+        return { success: true };
     };
 
     return { user, loading, handleRegister, handleLogin, handleLogout };
