@@ -8,7 +8,7 @@ const authCookieOptions = {
     httpOnly: true,
     sameSite: isProduction ? "none" : "lax",
     secure: isProduction,
-    maxAge: 24 * 60 * 60 * 1000
+    maxAge: 7 * 24 * 60 * 60 * 1000
 };
 
 //register controller
@@ -29,7 +29,7 @@ const register = async (req, res) => {
         console.log("✅ User created:", user);
 
         //Generating the token
-        const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET, { expiresIn: "1d" });
+        const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
         //setting the cookie
         res.cookie("token", token, authCookieOptions);
@@ -68,7 +68,7 @@ const login = async (req, res) => {
         }
 
         //Generating the token
-        const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET, { expiresIn: "1d" });
+        const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
         //setting the cookie
         res.cookie("token", token, authCookieOptions);
