@@ -1,14 +1,27 @@
 const OpenAI = require("openai");
 
+// Get referer from env or construct from headers
+const getReferer = () => {
+    if (process.env.API_REFERER) {
+        return process.env.API_REFERER;
+    }
+    // Fallback for development only
+    return process.env.NODE_ENV === 'development' ? "http://localhost:5000" : "https://ai-interview.app";
+};
+
 const client = new OpenAI({
     baseURL: "https://openrouter.ai/api/v1",
 
     apiKey: process.env.OPENROUTER_API_KEY,
 
     defaultHeaders: {
-        "HTTP-Referer": process.env.API_REFERER || "http://localhost:5000",
+        "HTTP-Referer": getReferer(),
         "X-Title": "InterviewPrepAI"
-    }
+    },
+    
+    // Add timeout configuration for production stability
+    timeout: process.env.NODE_ENV === 'production' ? 60000 : 30000, // 60s for prod, 30s for dev
+    maxRetries: process.env.NODE_ENV === 'production' ? 2 : 0
 });
 
 // Plain JSON schema
@@ -301,10 +314,20 @@ Instructions:
 
     } catch (err) {
 
-        console.error(
-            "❌ OpenRouter API Error:",
-            err.message
-        );
+        console.error("❌ OpenRouter API Error:");
+        console.error("Message:", err.message);
+        console.error("Status:", err.status);
+        console.error("Response:", err.response?.data || "No response data");
+        console.error("API Key Set:", !!process.env.OPENROUTER_API_KEY);
+        console.error("API Referer:", getReferer());
+
+        // Provide more helpful error messages
+        if (err.status === 401 || err.message.includes("401")) {
+            throw new Error("API Authentication failed - check OPENROUTER_API_KEY");
+        }
+        if (err.status === 403 || err.message.includes("403")) {
+            throw new Error("API access denied - check HTTP-Referer and API key permissions");
+        }
 
         throw err;
     }

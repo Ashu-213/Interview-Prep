@@ -81,8 +81,21 @@ async function generateInterviewReportController(req, res) {
         });
     } catch (error) {
         console.error("❌ Error generating interview report:", error.message);
-        console.error(error.stack);
-        res.status(500).json({ error: error.message });
+        console.error("Full error stack:", error.stack);
+        
+        // Log environment-specific debug info
+        console.error("Debug Info:");
+        console.error("- NODE_ENV:", process.env.NODE_ENV);
+        console.error("- Has OPENROUTER_API_KEY:", !!process.env.OPENROUTER_API_KEY);
+        console.error("- Has API_REFERER:", !!process.env.API_REFERER);
+        
+        res.status(500).json({ 
+            error: error.message,
+            debug: process.env.NODE_ENV === 'development' ? {
+                stack: error.stack,
+                fullError: error
+            } : undefined
+        });
     }
 }
 
