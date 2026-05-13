@@ -294,7 +294,7 @@ Instructions:
 
                 temperature: 0.3,
 
-                max_tokens: 4000
+                max_tokens: 1200
             });
 
         const raw =
