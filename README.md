@@ -4,7 +4,7 @@ AI interview preparation app with a Node/Express backend and a React/Vite fronte
 
 ## Stack
 
-- Backend: Node.js, Express, MongoDB (Mongoose), JWT auth (cookie-based), Multer, pdf-parse, OpenRouter (via OpenAI SDK)
+- Backend: Node.js, Express, MongoDB (Mongoose), JWT auth (cookie-based), Multer, pdf-parse, Groq (via OpenAI SDK)
 - Frontend: React, Vite, React Router, Axios, SCSS
 
 ## Monorepo Layout
@@ -20,6 +20,10 @@ Create `backend/.env`:
 MONGO_URL=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
 GROQ_API_KEY=your_groq_api_key
+MODEL=llama-3.3-70b-versatile
+MAX_TOKENS=4000
+# Optional override if needed
+# GROQ_BASE_URL=https://api.groq.com/openai/v1
 PORT=3000
 CORS_ORIGIN=http://localhost:5173
 NODE_ENV=development

@@ -86,7 +86,7 @@ async function generateInterviewReportController(req, res) {
         // Log environment-specific debug info
         console.error("Debug Info:");
         console.error("- NODE_ENV:", process.env.NODE_ENV);
-        console.error("- Has OPENROUTER_API_KEY:", !!process.env.OPENROUTER_API_KEY);
+        console.error("- Has GROQ_API_KEY:", !!process.env.GROQ_API_KEY);
         console.error("- Has API_REFERER:", !!process.env.API_REFERER);
         
         res.status(500).json({ 

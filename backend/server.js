@@ -3,7 +3,7 @@ const app = require("./src/app");
 const connectDB = require("./src/config/database");
 
 // Validate required environment variables
-const requiredEnvVars = ["MONGO_URL", "OPENROUTER_API_KEY"];
+const requiredEnvVars = ["MONGO_URL", "GROQ_API_KEY"];
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
 if (missingVars.length > 0) {
@@ -16,11 +16,7 @@ if (missingVars.length > 0) {
     process.exit(1);
 }
 
-// Warn about API_REFERER if not set
-if (!process.env.API_REFERER && process.env.NODE_ENV === 'production') {
-    console.warn("⚠️  WARNING: API_REFERER not set for production");
-    console.warn("   OpenRouter API may reject requests. Set API_REFERER to your deployed domain.");
-}
+// Groq-only setup does not require API_REFERER.
 
 //start the server
 const PORT = process.env.PORT || 3000;

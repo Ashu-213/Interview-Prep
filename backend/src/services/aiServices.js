@@ -1,15 +1,12 @@
-// Optional fetch fallback for Groq HTTP calls (Node 18+ has global fetch)
-let fetchFn = globalThis.fetch;
-if (!fetchFn) {
-    try {
-        // eslint-disable-next-line global-require
-        fetchFn = require("node-fetch");
-    } catch (e) {
-        fetchFn = null;
-    }
-}
+const OpenAI = require("openai");
 
-// No OpenRouter/OpenAI client — this service uses Groq HTTP API only.
+// Groq is OpenAI-compatible; use the official Groq OpenAI base URL.
+const client = new OpenAI({
+    baseURL: process.env.GROQ_BASE_URL || "https://api.groq.com/openai/v1",
+    apiKey: process.env.GROQ_API_KEY,
+    timeout: process.env.NODE_ENV === 'production' ? 60000 : 30000,
+    maxRetries: process.env.NODE_ENV === 'production' ? 2 : 0
+});
 
 // Plain JSON schema
 const interviewReportSchema = {
@@ -252,55 +249,10 @@ Instructions:
 - preparationPlan: exactly 7 days
 `;
 
-    // Decide provider and model from environment
-    const provider = (process.env.LLM_PROVIDER || "groq").toLowerCase();
+    // Decide model from environment
     const model = process.env.MODEL || "llama-3.3-70b-versatile";
     const maxTokens = parseInt(process.env.MAX_TOKENS || "4000", 10);
     const temperature = parseFloat(process.env.TEMPERATURE || "0.3");
-
-    // Helper for calling Groq-style HTTP APIs when requested
-    async function callGroqAPI(messages) {
-        if (!fetchFn) {
-            throw new Error("No fetch available in runtime. Install 'node-fetch' or use Node 18+.");
-        }
-
-        const groqUrl = process.env.GROQ_API_URL || "https://api.groq.ai/v1/complete";
-        const apiKey = process.env.GROQ_API_KEY;
-
-        if (!apiKey) {
-            throw new Error("GROQ_API_KEY is not set in environment");
-        }
-
-        const body = {
-            model,
-            // Many LLM HTTP APIs accept 'messages' or 'input' — pass messages to keep structure.
-            messages,
-            max_tokens: maxTokens,
-            temperature
-        };
-
-        const res = await fetchFn(groqUrl, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${apiKey}`
-            },
-            body: JSON.stringify(body)
-        });
-
-        const data = await res.json();
-
-        // Try common response shapes
-        // 1) { output: 'text' }  2) { choices: [{ text: '...' }]} 3) { choices: [{ message: { content: '...' } }] }
-        const text = data.output || (data.choices && (data.choices[0].text || data.choices[0].message?.content));
-
-        if (!text) {
-            console.error("Unexpected Groq response shape:", JSON.stringify(data).substring(0, 1000));
-            throw new Error("GROQ API returned an unexpected response");
-        }
-
-        return text;
-    }
 
     try {
         // Prepare messages in Chat format for both providers
@@ -309,9 +261,19 @@ Instructions:
             { role: "user", content: prompt }
         ];
 
-        let raw;
+        if (!process.env.GROQ_API_KEY) {
+            throw new Error("GROQ_API_KEY is not set in environment");
+        }
 
-        raw = await callGroqAPI(messages);
+        const response = await client.chat.completions.create({
+            model,
+            messages,
+            response_format: { type: "json_object" },
+            temperature,
+            max_tokens: maxTokens
+        });
+
+        const raw = response.choices[0].message.content;
 
         console.log("✅ AI raw response:", raw.substring(0, 200));
 
