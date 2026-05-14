@@ -19,7 +19,7 @@ Create `backend/.env`:
 ```env
 MONGO_URL=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
-OPENROUTER_API_KEY=your_openrouter_api_key
+GROQ_API_KEY=your_groq_api_key
 PORT=3000
 CORS_ORIGIN=http://localhost:5173
 NODE_ENV=development

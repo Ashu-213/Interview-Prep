@@ -1,28 +1,15 @@
-const OpenAI = require("openai");
-
-// Get referer from env or construct from headers
-const getReferer = () => {
-    if (process.env.API_REFERER) {
-        return process.env.API_REFERER;
+// Optional fetch fallback for Groq HTTP calls (Node 18+ has global fetch)
+let fetchFn = globalThis.fetch;
+if (!fetchFn) {
+    try {
+        // eslint-disable-next-line global-require
+        fetchFn = require("node-fetch");
+    } catch (e) {
+        fetchFn = null;
     }
-    // Fallback for development only
-    return process.env.NODE_ENV === 'development' ? "http://localhost:5000" : "https://ai-interview.app";
-};
+}
 
-const client = new OpenAI({
-    baseURL: "https://openrouter.ai/api/v1",
-
-    apiKey: process.env.OPENROUTER_API_KEY,
-
-    defaultHeaders: {
-        "HTTP-Referer": getReferer(),
-        "X-Title": "InterviewPrepAI"
-    },
-    
-    // Add timeout configuration for production stability
-    timeout: process.env.NODE_ENV === 'production' ? 60000 : 30000, // 60s for prod, 30s for dev
-    maxRetries: process.env.NODE_ENV === 'production' ? 2 : 0
-});
+// No OpenRouter/OpenAI client — this service uses Groq HTTP API only.
 
 // Plain JSON schema
 const interviewReportSchema = {
@@ -265,68 +252,83 @@ Instructions:
 - preparationPlan: exactly 7 days
 `;
 
+    // Decide provider and model from environment
+    const provider = (process.env.LLM_PROVIDER || "groq").toLowerCase();
+    const model = process.env.MODEL || "llama-3.3-70b-versatile";
+    const maxTokens = parseInt(process.env.MAX_TOKENS || "4000", 10);
+    const temperature = parseFloat(process.env.TEMPERATURE || "0.3");
+
+    // Helper for calling Groq-style HTTP APIs when requested
+    async function callGroqAPI(messages) {
+        if (!fetchFn) {
+            throw new Error("No fetch available in runtime. Install 'node-fetch' or use Node 18+.");
+        }
+
+        const groqUrl = process.env.GROQ_API_URL || "https://api.groq.ai/v1/complete";
+        const apiKey = process.env.GROQ_API_KEY;
+
+        if (!apiKey) {
+            throw new Error("GROQ_API_KEY is not set in environment");
+        }
+
+        const body = {
+            model,
+            // Many LLM HTTP APIs accept 'messages' or 'input' — pass messages to keep structure.
+            messages,
+            max_tokens: maxTokens,
+            temperature
+        };
+
+        const res = await fetchFn(groqUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${apiKey}`
+            },
+            body: JSON.stringify(body)
+        });
+
+        const data = await res.json();
+
+        // Try common response shapes
+        // 1) { output: 'text' }  2) { choices: [{ text: '...' }]} 3) { choices: [{ message: { content: '...' } }] }
+        const text = data.output || (data.choices && (data.choices[0].text || data.choices[0].message?.content));
+
+        if (!text) {
+            console.error("Unexpected Groq response shape:", JSON.stringify(data).substring(0, 1000));
+            throw new Error("GROQ API returned an unexpected response");
+        }
+
+        return text;
+    }
+
     try {
+        // Prepare messages in Chat format for both providers
+        const messages = [
+            { role: "system", content: "Return ONLY valid JSON. No markdown. No explanation." },
+            { role: "user", content: prompt }
+        ];
 
-        const response =
-            await client.chat.completions.create({
+        let raw;
 
-                model:
-                    "openai/gpt-4-turbo",
+        raw = await callGroqAPI(messages);
 
-                messages: [
+        console.log("✅ AI raw response:", raw.substring(0, 200));
 
-                    {
-                        role: "system",
-
-                        content:
-                            "Return ONLY valid JSON. No markdown. No explanation."
-                    },
-
-                    {
-                        role: "user",
-                        content: prompt
-                    }
-                ],
-
-                response_format: {
-                    type: "json_object"
-                },
-
-                temperature: 0.3,
-
-                max_tokens: 1200
-            });
-
-        const raw =
-            response.choices[0].message.content;
-
-        console.log(
-            "✅ AI raw response:",
-            raw.substring(0, 200)
-        );
-
-        const cleaned = raw
-            .replace(/```json/g, "")
-            .replace(/```/g, "")
-            .trim();
+        const cleaned = raw.replace(/```json/g, "").replace(/```/g, "").trim();
 
         return safeJSONParse(cleaned);
 
     } catch (err) {
+        console.error("❌ LLM provider error:");
+        console.error("Message:", err.message || err);
 
-        console.error("❌ OpenRouter API Error:");
-        console.error("Message:", err.message);
-        console.error("Status:", err.status);
-        console.error("Response:", err.response?.data || "No response data");
-        console.error("API Key Set:", !!process.env.OPENROUTER_API_KEY);
-        console.error("API Referer:", getReferer());
-
-        // Provide more helpful error messages
-        if (err.status === 401 || err.message.includes("401")) {
-            throw new Error("API Authentication failed - check OPENROUTER_API_KEY");
+        // Provide more helpful error messages for common failure modes
+        if ((err.status === 401) || (err.message && err.message.includes("401"))) {
+            throw new Error("API Authentication failed - check your provider API key and environment variables");
         }
-        if (err.status === 403 || err.message.includes("403")) {
-            throw new Error("API access denied - check HTTP-Referer and API key permissions");
+        if ((err.status === 403) || (err.message && err.message.includes("403"))) {
+            throw new Error("API access denied - check referer, key permissions, and provider configuration");
         }
 
         throw err;
